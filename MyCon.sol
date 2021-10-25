@@ -1,20 +1,37 @@
-pragma solidity 0.4.24;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.6.0;
 
-contract MyCon {
-       uint256 private balance;
-    event Transaction(
+import "@chainlink/contracts/src/v0.6/ChainlinkClient.sol";
+import "@chainlink/contracts/src/v0.6/vendor/Ownable.sol";
+
+contract MyCon is ChainlinkClient, Ownable {
+
+        event Transaction(
     
         address indexed to ,
         uint256 amount);
-         
-        function sendLink(address to , uint256 amount) external{
-            require(amount>1);
-            Transaction(to, amount);
-            
-        }
-        
-        function deposit() public payable {
-            
-            balance+= msg.value;
-        }
+
+  
+  constructor() public Ownable() {
+    setPublicChainlinkToken();
+  }
+
+  function getChainlinkToken() public view returns (address) {
+    return chainlinkTokenAddress();
+  }
+
+  function withdrawLink() public onlyOwner {
+    LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
+    require(link.transfer(msg.sender, link.balanceOf(address(this))), "Unable to transfer");
+  }
+  
+  function sendLink(address to , uint amount) external
+{
+  require(amount >1);
+    require(to == 0x16E560640683638fAeEE86e916C2C663228560a9)  ; 
+    LinkTokenInterface link = LinkTokenInterface(chainlinkTokenAddress());
+    link.transfer(msg.sender, amount);
+    emit Transaction(to,amount);
+    
+}  
 }
